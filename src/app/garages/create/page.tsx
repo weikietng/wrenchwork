@@ -4,8 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { GarageSkeleton } from "@/components/garage-skeleton"
 import { Upload, X } from "lucide-react"
-import { parsePhoneNumber, isValidPhoneNumber } from "libphonenumber-js"
-import { createGarageSchema } from "@/lib/validations/garage"
+import { isValidPhoneNumber } from "libphonenumber-js"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -51,7 +50,7 @@ export default function CreateGaragePage() {
   const [picture, setPicture] = useState<string | null>(null)
   const [picturePreview, setPicturePreview] = useState<string | null>(null)
 
-  const validateField = (name: string, value: any) => {
+  const validateField = (name: string, value: string) => {
     try {
       if (name === "name") {
         if (!value || value.trim().length === 0) {
@@ -70,7 +69,7 @@ export default function CreateGaragePage() {
           setFieldErrors(prev => ({ ...prev, email: undefined }))
         }
       }
-    } catch (error) {
+    } catch {
       // Ignore validation errors during typing
     }
   }
@@ -171,7 +170,7 @@ export default function CreateGaragePage() {
       // Show loading skeleton and redirect to the new garage dashboard
       setIsRedirecting(true)
       setTimeout(() => {
-        router.push(`/dashboard/${data.garage.id}`)
+        router.push(`/app/${data.garage.id}/dashboard`)
         router.refresh()
       }, 500)
     } catch (error) {
@@ -317,7 +316,7 @@ export default function CreateGaragePage() {
                     setFieldErrors(prev => ({ ...prev, phoneNumber: "Phone number is required" }))
                   }
                 }}
-                onCountryChange={(code) => {
+                onCountryChange={(code: string) => {
                   setPhoneCountryCode(code)
                   // Re-validate phone number with new country code
                   if (phoneNumber) {

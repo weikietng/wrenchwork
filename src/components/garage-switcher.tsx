@@ -89,7 +89,7 @@ export function GarageSwitcher({ className }: GarageSwitcherProps) {
   function handleGarageSelect(garage: GarageWithRole) {
     setSelectedGarage(garage)
     setOpen(false)
-    router.push(`/dashboard/${garage.id}`)
+    router.push(`/app/${garage.id}/dashboard`)
   }
 
   function handleCreateGarage() {
