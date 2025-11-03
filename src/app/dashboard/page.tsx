@@ -1,7 +1,10 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 
 import { auth } from "@/lib/auth"
+import { sql, withRLS } from "@/lib/db"
+import { Button } from "@/components/ui/button"
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({
@@ -12,107 +15,59 @@ export default async function DashboardPage() {
     redirect("/login")
   }
 
+  // Get user's garages (with RLS context)
+  const garages = await withRLS(session.user.id, async () => {
+    return await sql`
+      SELECT 
+        g.*,
+        gm.role as "userRole"
+      FROM garage g
+      INNER JOIN garage_member gm ON g.id = gm."garageId"
+      WHERE gm."userId" = ${session.user.id}
+      ORDER BY g."createdAt" DESC
+      LIMIT 1
+    `
+  })
+
+  // If user has garages, redirect to the first one
+  if (garages.length > 0) {
+    redirect(`/dashboard/${garages[0].id}`)
+  }
+
+  // No garages - show onboarding
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Welcome back, {session.user.name || session.user.email}!</p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <svg
-                className="h-6 w-6 text-primary"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold">Profile</h3>
-              <p className="text-sm text-muted-foreground">Manage your account</p>
-            </div>
-          </div>
+    <div className="container mx-auto flex min-h-screen items-center justify-center px-4">
+      <div className="max-w-md space-y-6 text-center">
+        <div>
+          <h1 className="text-3xl font-bold">Welcome to Wrenchwork</h1>
+          <p className="mt-2 text-muted-foreground">
+            Get started by creating your first garage
+          </p>
         </div>
 
         <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <svg
-                className="h-6 w-6 text-primary"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold">Settings</h3>
-              <p className="text-sm text-muted-foreground">Configure preferences</p>
-            </div>
-          </div>
+          <svg
+            className="mx-auto h-16 w-16 text-muted-foreground"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+            />
+          </svg>
+          <h2 className="mt-4 text-xl font-semibold">Create Your Garage</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Set up your garage profile to start managing customers, vehicles, and jobs
+          </p>
         </div>
 
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <svg
-                className="h-6 w-6 text-primary"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold">Analytics</h3>
-              <p className="text-sm text-muted-foreground">View your stats</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8 rounded-lg border bg-card p-6">
-        <h2 className="mb-4 text-xl font-semibold">Recent Activity</h2>
-        <div className="space-y-4">
-          <div className="flex items-center gap-4 rounded-lg border p-4">
-            <div className="h-2 w-2 rounded-full bg-green-500" />
-            <div className="flex-1">
-              <p className="font-medium">Account created</p>
-              <p className="text-sm text-muted-foreground">Your account was successfully created</p>
-            </div>
-            <span className="text-sm text-muted-foreground">Just now</span>
-          </div>
-          <div className="flex items-center gap-4 rounded-lg border p-4 opacity-50">
-            <div className="h-2 w-2 rounded-full bg-gray-400" />
-            <div className="flex-1">
-              <p className="font-medium">More features coming soon</p>
-              <p className="text-sm text-muted-foreground">Stay tuned for updates</p>
-            </div>
-          </div>
-        </div>
+        <Button asChild size="lg" className="w-full">
+          <Link href="/garages/create">Create Garage</Link>
+        </Button>
       </div>
     </div>
   )
