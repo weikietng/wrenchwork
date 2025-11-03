@@ -60,8 +60,14 @@ export function AddressForm({ value, onChange, errors }: AddressFormProps) {
   const [states, setStates] = React.useState<IState[]>([])
   const [cities, setCities] = React.useState<ICity[]>([])
   const [countryOpen, setCountryOpen] = React.useState(false)
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true)
 
   const countries = Country.getAllCountries()
+
+  // Mark as loaded after first render
+  React.useEffect(() => {
+    setIsInitialLoad(false)
+  }, [])
 
   // Update states when country changes
   React.useEffect(() => {
@@ -69,8 +75,8 @@ export function AddressForm({ value, onChange, errors }: AddressFormProps) {
       const countryStates = State.getStatesOfCountry(value.country)
       setStates(countryStates)
       
-      // Reset state and city if country changed
-      if (value.state && !countryStates.find((s) => s.isoCode === value.state)) {
+      // Reset state and city if country changed (but not on initial load)
+      if (!isInitialLoad && value.state && !countryStates.find((s) => s.isoCode === value.state)) {
         onChange({ ...value, state: "", city: "" })
       }
     } else {
@@ -85,10 +91,8 @@ export function AddressForm({ value, onChange, errors }: AddressFormProps) {
       const stateCities = City.getCitiesOfState(value.country, value.state)
       setCities(stateCities)
       
-      // Reset city if state changed
-      if (value.city && !stateCities.find((c) => c.name === value.city)) {
-        onChange({ ...value, city: "" })
-      }
+      // Don't reset city on initial load - keep manually entered cities
+      // Only reset if user actively changes the state
     } else {
       setCities([])
     }
