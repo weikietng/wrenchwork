@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { SidebarWrapper } from "@/components/sidebar-wrapper"
+import { TopBarHider } from "@/components/topbar-hider"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -23,6 +24,7 @@ export default async function AppLayout({
 
   return (
     <SidebarProvider>
+      <TopBarHider />
       <SidebarWrapper />
       <main className="flex min-h-screen w-full flex-1 flex-col">
         {children}
