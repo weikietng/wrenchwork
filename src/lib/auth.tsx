@@ -5,6 +5,7 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 
 import { VerificationEmail } from "@/lib/emails/verification-email";
+import { PasswordResetEmail } from "@/lib/emails/password-reset-email";
 
 const url = process.env.DATABASE_URL ?? process.env.DATABASE_URL_UNPOOLED;
 if (!url) {
@@ -65,6 +66,43 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     disabledPaths: ["/sign-up", "/sign-in"],
+    resetPasswordTokenExpiresIn: 3600, // 1 hour in seconds
+    async sendResetPassword({ user, url }) {
+      if (!resend) {
+        console.warn("Resend client not configured. Skipping password reset email send.");
+        return;
+      }
+
+      // Better Auth provides the full reset URL, use it directly
+      const resetUrl = url;
+      const firstName = user.name?.split(" ")[0] || null;
+
+      try {
+        const emailHtml = await render(
+          <PasswordResetEmail
+            firstName={firstName}
+            resetUrl={resetUrl}
+          />
+        );
+
+        const { data, error } = await resend.emails.send({
+          from: resendFromEmail,
+          to: user.email,
+          subject: "Reset your Wrenchwork password",
+          html: emailHtml,
+        });
+
+        if (error) {
+          console.error("Resend error:", error);
+          throw new Error(`Failed to send password reset email: ${error.message}`);
+        }
+
+        console.log("Password reset email sent:", data);
+      } catch (err) {
+        console.error("Failed to send password reset email:", err);
+        throw err;
+      }
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
@@ -104,6 +142,11 @@ export const auth = betterAuth({
         console.error("Failed to send verification email:", err);
         throw err;
       }
+    },
+  },
+  account: {
+    accountLinking: {
+      enabled: false,
     },
   },
 });

@@ -44,7 +44,7 @@ export function LoginForm({
         email,
         password,
         rememberMe: true,
-        callbackURL: "/dashboard",
+        callbackURL: "/app",
       })
 
       if (signInError) {
@@ -57,7 +57,7 @@ export function LoginForm({
       }
 
       onSuccess?.()
-      router.push("/dashboard")
+      router.push("/app")
       router.refresh()
     } catch {
       setError("Something went wrong. Please try again.")
@@ -99,7 +99,7 @@ export function LoginForm({
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <Link
-                    href="#"
+                    href="/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
@@ -114,11 +114,23 @@ export function LoginForm({
                   disabled={isLoading}
                 />
               </Field>
-              <Field className="space-y-2">
-                <Button type="submit" disabled={isLoading}>
+              <Field>
+                <Button type="submit" disabled={isLoading} className="w-full">
                   {isLoading ? "Logging in..." : "Login"}
                 </Button>
-                <Button variant="outline" type="button" asChild disabled={isLoading}>
+              </Field>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    Don&apos;t have an account yet?
+                  </span>
+                </div>
+              </div>
+              <Field>
+                <Button variant="outline" type="button" asChild disabled={isLoading} className="w-full">
                   <Link href="/signup">Create an account</Link>
                 </Button>
               </Field>

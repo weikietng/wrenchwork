@@ -4,20 +4,17 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 
-import { AuthAvatar } from "@/components/custom-ui/auth-avatar"
 import { ModeToggle } from "@/components/custom-ui/theme-changer"
-import { authClient } from "@/lib/auth-client"
+import { Button } from "@/components/ui/button"
 
 export function TopBar() {
   const pathname = usePathname()
   const hideAuthControls = pathname === "/login" || pathname === "/signup"
-  const { data: session } = authClient.useSession()
-  const isLoggedIn = !!session?.user
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-screen-xl items-center justify-between px-4">
-        <Link href={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-2 font-semibold text-foreground">
+        <Link href="/" className="flex items-center gap-2 font-semibold text-foreground">
           <Image
             src="/icon.png"
             alt="Wrenchwork logo"
@@ -31,7 +28,11 @@ export function TopBar() {
         </Link>
         <div className="flex items-center gap-2">
           <ModeToggle />
-          {!hideAuthControls ? <AuthAvatar /> : null}
+          {!hideAuthControls && (
+            <Button asChild>
+              <Link href="/login">Log In</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>
