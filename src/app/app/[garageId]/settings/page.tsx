@@ -88,7 +88,8 @@ export default function GarageSettingsPage() {
       const matchedCountry = countries.find(
         (c) => c.isoCode === (garage.country || "") || c.name === (garage.country || "")
       )
-      const countryIso = matchedCountry?.isoCode || ""
+      // If we can't map it, keep the stored value so the UI can still render it via fallback
+      const countryIso = matchedCountry?.isoCode || (garage.country || "")
 
       let stateIso = ""
       if (countryIso) {
@@ -96,7 +97,8 @@ export default function GarageSettingsPage() {
         const matchedState = states.find(
           (s) => s.isoCode === (garage.state || "") || s.name === (garage.state || "")
         )
-        stateIso = matchedState?.isoCode || ""
+        // If we can't map it, keep the stored value so the UI can display it/fallback option
+        stateIso = matchedState?.isoCode || (garage.state || "")
       }
 
       // Set address data with normalized codes

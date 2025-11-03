@@ -2,15 +2,13 @@
 
 import { usePathname } from "next/navigation"
 import { TopBar } from "@/components/custom-ui/top-bar"
-import { authClient } from "@/lib/auth-client"
 
 export function ConditionalTopBar() {
   const pathname = usePathname()
-  const { data: session } = authClient.useSession()
-  const isLoggedIn = !!session?.user
+  const hideByOverride = typeof document !== "undefined" && document.body.classList.contains("hide-topbar")
   
-  // Hide TopBar on /app routes or when logged in (covers 404 too)
-  if (pathname.startsWith("/app") || isLoggedIn) {
+  // Hide TopBar on /app routes or when explicitly overridden (e.g., 404)
+  if (pathname.startsWith("/app") || hideByOverride) {
     return null
   }
   

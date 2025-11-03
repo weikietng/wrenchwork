@@ -11,6 +11,14 @@ export default function NotFound() {
   const { data: session } = authClient.useSession()
   const isLoggedIn = !!session?.user
 
+  // Hide TopBar while on 404
+  useEffect(() => {
+    document.body.classList.add("hide-topbar")
+    return () => {
+      document.body.classList.remove("hide-topbar")
+    }
+  }, [])
+
   useEffect(() => {
     if (!carRef.current) return
     // reference additional imports to avoid unused warnings

@@ -194,22 +194,38 @@ export function AddressForm({ value, onChange, errors }: AddressFormProps) {
       <Field>
         <FieldLabel htmlFor="state">State/Province *</FieldLabel>
         <FieldContent>
-          <Select
-            value={value.state}
-            onValueChange={(state: string) => onChange({ ...value, state, city: "" })}
-            disabled={!value.country || states.length === 0}
-          >
-            <SelectTrigger id="state">
-              <SelectValue placeholder="Select state/province" />
-            </SelectTrigger>
-            <SelectContent>
-              {states.map((state) => (
-                <SelectItem key={state.isoCode} value={state.isoCode}>
-                  {state.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {states.length > 0 ? (
+            <Select
+              value={(value.state || "").toString().trim().toUpperCase()}
+              onValueChange={(state: string) => onChange({ ...value, state, city: "" })}
+              disabled={!value.country}
+            >
+              <SelectTrigger id="state">
+                <SelectValue placeholder="Select state/province" />
+              </SelectTrigger>
+              <SelectContent>
+                {/* Include saved state if not present in list */}
+                {value.state && !states.some((s) => s.isoCode === (value.state || "").toString().trim().toUpperCase()) ? (
+                  <SelectItem key={`current-${value.state}`} value={(value.state || "").toString().trim().toUpperCase()}>
+                    {states.find((s) => s.isoCode === (value.state || "").toString().trim().toUpperCase())?.name || value.state}
+                  </SelectItem>
+                ) : null}
+                {states.map((state) => (
+                  <SelectItem key={state.isoCode} value={state.isoCode}>
+                    {state.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              id="state"
+              value={value.state}
+              onChange={(e) => onChange({ ...value, state: e.target.value })}
+              placeholder="Enter state/province"
+              disabled={!value.country}
+            />
+          )}
           <FieldError errors={errors?.state?.map(e => ({ message: e }))} />
           {!value.country && (
             <FieldDescription>Please select a country first</FieldDescription>
