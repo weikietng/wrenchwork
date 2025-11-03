@@ -231,6 +231,12 @@ export function AddressForm({ value, onChange, errors }: AddressFormProps) {
                 <SelectValue placeholder="Select city" />
               </SelectTrigger>
               <SelectContent>
+                {/* Include currently saved city if it's not in the fetched list */}
+                {value.city && !cities.some((c) => c.name === value.city) ? (
+                  <SelectItem key={`current-${value.city}`} value={value.city}>
+                    {value.city}
+                  </SelectItem>
+                ) : null}
                 {cities.map((city) => (
                   <SelectItem key={city.name} value={city.name}>
                     {city.name}

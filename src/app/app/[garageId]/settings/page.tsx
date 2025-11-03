@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Upload, X } from "lucide-react"
 import { isValidPhoneNumber, getCountries, getCountryCallingCode } from "libphonenumber-js"
+import { Country, State } from "country-state-city"
 import { useGarageData } from "@/hooks/use-garage-data"
 import { GarageSkeleton } from "@/components/garage-skeleton"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -82,13 +83,29 @@ export default function GarageSettingsPage() {
       setPhoneNumber(garage.phoneNumber || "")
       setPhoneCountryCode(garage.phoneCountryCode || "+1")
 
-      // Set address data
+      // Normalize country/state to ISO codes so Select shows the saved values
+      const countries = Country.getAllCountries()
+      const matchedCountry = countries.find(
+        (c) => c.isoCode === (garage.country || "") || c.name === (garage.country || "")
+      )
+      const countryIso = matchedCountry?.isoCode || ""
+
+      let stateIso = ""
+      if (countryIso) {
+        const states = State.getStatesOfCountry(countryIso)
+        const matchedState = states.find(
+          (s) => s.isoCode === (garage.state || "") || s.name === (garage.state || "")
+        )
+        stateIso = matchedState?.isoCode || ""
+      }
+
+      // Set address data with normalized codes
       setAddress({
         addressLine1: garage.addressLine1 || "",
         addressLine2: garage.addressLine2 || "",
         city: garage.city || "",
-        state: garage.state || "",
-        country: garage.country || "",
+        state: stateIso,
+        country: countryIso,
         postalCode: garage.postalCode || "",
       })
 
