@@ -4,9 +4,12 @@ import { useEffect, useRef } from "react"
 import Link from "next/link"
 import { animate, createTimeline, createTimer } from "animejs"
 import { Button } from "@/components/ui/button"
+import { authClient } from "@/lib/auth-client"
 
 export default function NotFound() {
   const carRef = useRef<SVGSVGElement | null>(null)
+  const { data: session } = authClient.useSession()
+  const isLoggedIn = !!session?.user
 
   useEffect(() => {
     if (!carRef.current) return
@@ -77,7 +80,9 @@ export default function NotFound() {
 
       <div>
         <Button asChild>
-          <Link href="/">Back to Home</Link>
+          <Link href={isLoggedIn ? "/app" : "/"}>
+            Back to {isLoggedIn ? "App" : "Home"}
+          </Link>
         </Button>
       </div>
     </main>

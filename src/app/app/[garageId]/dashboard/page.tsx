@@ -33,7 +33,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   const garage = garages[0] as Garage
 
   if (!garage) {
-    redirect("/dashboard")
+    redirect("/app")
   }
 
   return (

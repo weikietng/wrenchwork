@@ -2,18 +2,16 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { sql, withRLS } from "@/lib/db"
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
 
-interface DashboardLayoutProps {
+interface GarageLayoutProps {
   children: React.ReactNode
   params: Promise<{ garageId: string }>
 }
 
-export default async function DashboardLayout({
+export default async function GarageLayout({
   children,
   params,
-}: DashboardLayoutProps) {
+}: GarageLayoutProps) {
   const { garageId } = await params
   const headersList = await headers()
 
@@ -35,15 +33,8 @@ export default async function DashboardLayout({
   const member = members[0]
 
   if (!member) {
-    redirect("/dashboard")
+    redirect("/app")
   }
 
-  return (
-    <SidebarProvider>
-      <DashboardSidebar userRole={member.role} />
-      <main className="flex min-h-screen w-full flex-1 flex-col">
-        {children}
-      </main>
-    </SidebarProvider>
-  )
+  return <>{children}</>
 }

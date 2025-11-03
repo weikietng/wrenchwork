@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Upload, X } from "lucide-react"
 import { isValidPhoneNumber, getCountries, getCountryCallingCode } from "libphonenumber-js"
+import { useGarageData } from "@/hooks/use-garage-data"
 import { GarageSkeleton } from "@/components/garage-skeleton"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -19,7 +20,6 @@ import { Input } from "@/components/ui/input"
 import { PhoneInputComponent } from "@/components/ui/phone-input"
 import { AddressForm, type AddressFormData } from "@/components/ui/address-form"
 import { cn } from "@/lib/utils"
-import type { GarageWithRole } from "@/types/garage"
 
 type FieldErrors = Record<string, string | undefined>
 
@@ -47,15 +47,15 @@ export default function GarageSettingsPage() {
   const router = useRouter()
   const garageId = params?.garageId as string
 
-  const [loading, setLoading] = useState(true)
+  // Use Zustand store for garage data
+  const { garage, loading, refetch } = useGarageData({ garageId })
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [formMessage, setFormMessage] = useState<{
     type: "success" | "error"
     text: string
   } | null>(null)
-
-  const [garage, setGarage] = useState<GarageWithRole | null>(null)
   const [formValues, setFormValues] = useState({
     name: "",
     email: "",
@@ -75,92 +75,34 @@ export default function GarageSettingsPage() {
   const [picture, setPicture] = useState<string | null>(null)
   const [picturePreview, setPicturePreview] = useState<string | null>(null)
 
+  // Populate form data when garage data is loaded from store
   useEffect(() => {
-    fetchGarage()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garageId])
+    if (garage) {
+      // Set phone number and country code separately
+      setPhoneNumber(garage.phoneNumber || "")
+      setPhoneCountryCode(garage.phoneCountryCode || "+1")
 
-  async function fetchGarage() {
-    try {
-      const response = await fetch(`/api/v1/garages/${garageId}`)
-      
-      // Handle 401 - Redirect to login
-      if (response.status === 401) {
-        router.push("/login?error=session_expired")
-        return
-      }
-
-      // Handle 403 - Access denied
-      if (response.status === 403) {
-        setFormMessage({
-          type: "error",
-          text: "You don't have permission to access this garage's settings",
-        })
-        setLoading(false)
-        return
-      }
-
-      // Handle 404 - Not found
-      if (response.status === 404) {
-        setFormMessage({
-          type: "error",
-          text: "Garage not found or you don't have access to it",
-        })
-        setLoading(false)
-        return
-      }
-
-      const data = await response.json()
-
-      if (data.success) {
-        const garageData = data.garage
-        setGarage(garageData)
-
-        // Set phone number and country code separately
-        setPhoneNumber(garageData.phoneNumber || "")
-        setPhoneCountryCode(garageData.phoneCountryCode || "+1")
-
-        // Set address data
-        setAddress({
-          addressLine1: garageData.addressLine1 || "",
-          addressLine2: garageData.addressLine2 || "",
-          city: garageData.city || "",
-          state: garageData.state || "",
-          country: garageData.country || "",
-          postalCode: garageData.postalCode || "",
-        })
-
-        setFormValues({
-          name: garageData.name,
-          email: garageData.email,
-        })
-
-        if (garageData.picture) {
-          setPicture(garageData.picture)
-          setPicturePreview(garageData.picture)
-        }
-      } else {
-        const errorMessage = data.error 
-          ? `${data.message}: ${data.error}` 
-          : data.message || "Failed to load garage details"
-        setFormMessage({
-          type: "error",
-          text: errorMessage,
-        })
-      }
-    } catch (error) {
-      console.error("Failed to fetch garage:", error)
-      const errorMessage = error instanceof Error 
-        ? `Network error: ${error.message}` 
-        : "Failed to load garage details"
-      setFormMessage({
-        type: "error",
-        text: errorMessage,
+      // Set address data
+      setAddress({
+        addressLine1: garage.addressLine1 || "",
+        addressLine2: garage.addressLine2 || "",
+        city: garage.city || "",
+        state: garage.state || "",
+        country: garage.country || "",
+        postalCode: garage.postalCode || "",
       })
-    } finally {
-      setLoading(false)
+
+      setFormValues({
+        name: garage.name,
+        email: garage.email,
+      })
+
+      if (garage.picture) {
+        setPicture(garage.picture)
+        setPicturePreview(garage.picture)
+      }
     }
-  }
+  }, [garage])
 
   const validateField = (name: string, value: string) => {
     try {
@@ -289,7 +231,10 @@ export default function GarageSettingsPage() {
       // Scroll to top to show success message
       window.scrollTo({ top: 0, behavior: "smooth" })
       
-      // Refresh the page data
+      // Refetch garage data from API to update cache
+      refetch()
+      
+      // Refresh the page
       setTimeout(() => {
         router.refresh()
       }, 1000)
@@ -416,7 +361,7 @@ export default function GarageSettingsPage() {
             <FieldContent>
               <Input
                 id="email"
-                name="email"
+                name="name"
                 type="email"
                 value={formValues.email}
                 onChange={handleChange}
@@ -501,7 +446,7 @@ export default function GarageSettingsPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push(`/dashboard/${garageId}`)}
+              onClick={() => router.push(`/app/${garageId}/dashboard`)}
               disabled={isSubmitting}
             >
               Cancel

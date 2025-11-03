@@ -6,11 +6,13 @@ import { auth } from "@/lib/auth"
 import { sql, withRLS } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 
-export default async function DashboardPage() {
+export default async function AppPage() {
+  const headersList = await headers()
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: headersList,
   })
 
+  // Layout already handles auth, so we know user is logged in here
   if (!session?.user) {
     redirect("/login")
   }
@@ -31,7 +33,7 @@ export default async function DashboardPage() {
 
   // If user has garages, redirect to the first one
   if (garages.length > 0) {
-    redirect(`/dashboard/${garages[0].id}`)
+    redirect(`/app/${garages[0].id}/dashboard`)
   }
 
   // No garages - show onboarding
